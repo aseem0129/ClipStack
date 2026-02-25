@@ -33,14 +33,14 @@ def paste_from_stack(stack, lock):
         if (
             keyboard.Key.cmd in current_keys
             and keyboard.Key.shift in current_keys
-            and keyboard.KeyCode.from_char('v') in current_keys
+            and key == keyboard.KeyCode.from_char('v')
         ):
             if stack:
                 with lock:
                     item_to_paste = stack.pop()
                     pyperclip.copy(item_to_paste)
 
-                time.sleep(0.01)
+                time.sleep(1)
 
                 with controller.pressed(keyboard.Key.cmd):
                     controller.press('v')
@@ -58,15 +58,17 @@ def paste_from_stack(stack, lock):
 
 
 
-        
 if __name__ == "__main__":
     stack = []
     lock = threading.Lock()
 
-    thread = threading.Thread(target=monitor_clipboard, args=(stack, lock))
-    thread.start()
+    copy_thread = threading.Thread(target=monitor_clipboard, args=(stack, lock))
+    paste_thread = threading.Thread(target=paste_from_stack, args=(stack, lock))
+
+    copy_thread.start()
+    paste_thread.start()
 
     print("Monitoring clipboard... copy some things!")
-    time.sleep(15)
+    time.sleep(45)
 
     print("Copied items: ", stack)
