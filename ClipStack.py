@@ -1,6 +1,7 @@
 import threading
 import pyperclip
 import time
+from pynput import keyboard
 
 # this function is the "polling" function to monitor any changes
 # from the clipboard and add to our stack
@@ -18,6 +19,31 @@ def monitor_clipboard(stack, lock):
                     
         prev_clipboard = curr_clipboard
         time.sleep(0.2)
+
+
+
+def paste_from_stack(stack, lock):
+
+    current_keys = set()
+    
+    # this function checks runs when any key is pressed
+    def on_press(key):
+        current_keys.add(key)
+
+        if keyboard.Key.cmd in current_keys and keyboard.Key.shift in current_keys and keyboard.KeyCode.from_char('v') in current_keys:
+            if stack:
+                with lock:
+                    item_to_paste = stack.pop()
+                    pyperclip.copy(item_to_paste)
+                    
+        time.sleep(0.01)
+
+
+        
+
+
+
+
 
 
 
