@@ -21,32 +21,44 @@ def monitor_clipboard(stack, lock):
         time.sleep(0.2)
 
 
-
 def paste_from_stack(stack, lock):
 
     current_keys = set()
+    controller = keyboard.Controller()
     
     # this function checks runs when any key is pressed
     def on_press(key):
         current_keys.add(key)
 
-        if keyboard.Key.cmd in current_keys and keyboard.Key.shift in current_keys and keyboard.KeyCode.from_char('v') in current_keys:
+        if (
+            keyboard.Key.cmd in current_keys
+            and keyboard.Key.shift in current_keys
+            and keyboard.KeyCode.from_char('v') in current_keys
+        ):
             if stack:
                 with lock:
                     item_to_paste = stack.pop()
                     pyperclip.copy(item_to_paste)
-                    
-        time.sleep(0.01)
+
+                time.sleep(0.01)
+
+                with controller.pressed(keyboard.Key.cmd):
+                    controller.press('v')
+                    controller.release('v')
+
+    def on_release(key):
+        current_keys.discard(key)
+    
+    listener = keyboard.Listener(
+        on_press=on_press, 
+        on_release=on_release)
+    
+    listener.start()
+    listener.join()
+
 
 
         
-
-
-
-
-
-
-
 if __name__ == "__main__":
     stack = []
     lock = threading.Lock()
