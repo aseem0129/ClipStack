@@ -25,7 +25,21 @@ def paste_from_stack(stack, lock, suppress):
 
     current_keys = set()
     controller = keyboard.Controller()
-    
+
+    def do_paste():
+        # run do_paste function
+        suppress.set()
+        with lock:
+            item_to_paste = stack.pop()
+            pyperclip.copy(item_to_paste)
+
+        time.sleep(0.1)
+
+        with controller.pressed(keyboard.Key.cmd):
+            controller.press('v')
+            controller.release('v')
+        suppress.clear()
+
     # this function checks runs when any key is pressed
     def on_press(key):
         current_keys.add(key)
@@ -34,19 +48,8 @@ def paste_from_stack(stack, lock, suppress):
             keyboard.Key.cmd in current_keys
             and keyboard.Key.shift in current_keys
             and key == keyboard.KeyCode.from_char('v')
-        ):
-            if stack:
-                suppress.set()
-                with lock:
-                    item_to_paste = stack.pop()
-                    pyperclip.copy(item_to_paste)
-                
-                with controller.pressed(keyboard.Key.cmd):
-                    controller.press('v')
-                    controller.release('v')
-                suppress.clear()
-
-                time.sleep(0.1)
+        ): 
+            if stack: threading.Thread(target=do_paste, daemon=True).start()
 
     def on_release(key):
         current_keys.discard(key)
